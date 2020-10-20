@@ -84,10 +84,23 @@ class Connection extends BaseConnection
      */
     protected function createConnection(array $config)
     {
-        $cluster   = Cassandra::cluster()->build();
+       $ssl = Cassandra::ssl()
+               ->withVerifyFlags(Cassandra::VERIFY_PEER_CERT)
+               ->withTrustedCerts($config['cert_path'])
+               ->build();     
+        
+        $cluster   = Cassandra::cluster()
+        ->withContactPoints($config['host'])
+        ->withPort((int) $config['port'])
+        ->withCredentials($config['username'],$config['password'])
+        ->withSSL($ssl)
+        ->withDefaultConsistency(Cassandra::CONSISTENCY_LOCAL_QUORUM)
+        ->build();
+
         $keyspace  = $config['keyspace'];
         $connection   = $cluster->connect($keyspace);
         return $connection;
+
     }
 
     /**
